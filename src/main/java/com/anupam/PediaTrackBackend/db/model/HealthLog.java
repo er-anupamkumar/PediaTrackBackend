@@ -14,14 +14,20 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "health_logs")
+@Table(
+        name = "health_logs",
+        indexes = {
+                @Index(name = "idx_health_logs_member_date", columnList = "family_member_id, loggedAt")
+        }
+)
 public class HealthLog {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private FamilyMember familyMember;
+    @JoinColumn(name = "family_member_id", nullable = false)
+    private FamilyMember familyMember; // NO cascade
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

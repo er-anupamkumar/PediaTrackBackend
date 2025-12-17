@@ -14,6 +14,10 @@ import java.util.UUID;
         name = "family_users",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"family_id", "user_id"})
+        },
+        indexes = {
+                @Index(name = "idx_family_users_family_id", columnList = "family_id"),
+                @Index(name = "idx_family_users_user_id", columnList = "user_id")
         }
 )
 @AllArgsConstructor
@@ -26,12 +30,12 @@ public class FamilyUser {
     private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "family_id")
+    @JoinColumn(name = "family_id", nullable = false)
     private Family family;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user; // NO cascade
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

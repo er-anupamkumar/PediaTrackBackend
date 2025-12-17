@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -15,7 +17,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "families")
+@Table(
+        name = "families",
+        indexes = {
+                @Index(name = "idx_families_name", columnList = "name")
+        }
+)
 public class Family {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -27,4 +34,10 @@ public class Family {
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
+    // ---------- Bidirectional ----------
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FamilyMember> members = new ArrayList<>();
+
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FamilyUser> users = new ArrayList<>(); // only deletes join table rows
 }
