@@ -14,7 +14,7 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: User
+  - name: AppUser
   - name: Family
   - name: FamilyMember
   - name: HealthLog
