@@ -30,6 +30,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'com.google.code.gson:gson:2.13.2'
+	implementation 'io.swagger.core.v3:swagger-annotations:2.2.10'
+	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	runtimeOnly 'com.h2database:h2'
@@ -45,23 +50,26 @@ tasks.named('test') {
 }
 
 openApiGenerate {
-	generatorName = "java"
+	generatorName = "spring"
 	inputSpec = "$rootDir/openapi/pediatrack.yaml"
 	outputDir = "$buildDir/generated"
-
+	apiPackage = "com.anupam.pediatrackbackend.api.generated.api"
 	modelPackage = "com.anupam.pediatrackbackend.api.generated.model"
-
+	configOptions = [
+			dateLibrary: "java8",
+			useJakartaEe: "true",
+			serializationLibrary: "jackson",
+			interfaceOnly: "true" // generates interfaces, avoids controller/stub errors
+	]
 	globalProperties = [
 			models: "",
 			apis: "false",
 			supportingFiles: "false"
 	]
+}
 
-	configOptions = [
-			dateLibrary          : "java8",
-			useJakartaEe         : "true",
-			serializationLibrary: "jackson"
-	]
+tasks.named('compileJava') {
+	dependsOn 'openApiGenerate'
 }
 
 sourceSets {
