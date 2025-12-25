@@ -38,4 +38,9 @@ public class AppUser {
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    public AppUser(String email, String passwordHash, String fullName) {
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.fullName = fullName;
+    }
 }
