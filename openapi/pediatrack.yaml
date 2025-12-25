@@ -1,0 +1,409 @@
+openapi: 3.0.3
+
+info:
+  title: PediaTrack API
+  description: >
+    API for managing families, family members, and health logs
+    (fever, medication, symptoms) with timeline and export support.
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: User
+  - name: Family
+  - name: FamilyMember
+  - name: HealthLog
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    AppUserCreateRequest:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        fullName:
+          type: string
+
+    AppUserUpdateRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+
+    AppUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        fullName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    FamilyCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+
+    FamilyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    FamilyMemberCreateRequest:
+      type: object
+      required: [name, dateOfBirth, gender]
+      properties:
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+
+    FamilyMemberResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        age:
+          type: integer
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+
+    HealthLogType:
+      type: string
+      enum: [FEVER, MEDICATION, SYMPTOM]
+
+    HealthLogCreateRequest:
+      type: object
+      required: [logType, loggedAt]
+      properties:
+        logType:
+          $ref: '#/components/schemas/HealthLogType'
+        loggedAt:
+          type: string
+          format: date-time
+        temperatureC:
+          type: number
+          format: double
+        medicationName:
+          type: string
+        dosage:
+          type: string
+        notes:
+          type: string
+
+    HealthLogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        logType:
+          $ref: '#/components/schemas/HealthLogType'
+        loggedAt:
+          type: string
+          format: date-time
+        temperatureC:
+          type: number
+          format: double
+        temperatureF:
+          type: number
+          format: double
+        medicationName:
+          type: string
+        dosage:
+          type: string
+        notes:
+          type: string
+
+    PagedResponseHealthLog:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/HealthLogResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+paths:
+
+  /families:
+    post:
+      tags: [Family]
+      summary: Create a family
+      operationId: createFamily
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyCreateRequest'
+      responses:
+        '201':
+          description: Family created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /families/{familyId}/members:
+    post:
+      tags: [FamilyMember]
+      summary: Add a family member
+      operationId: addFamilyMember
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyMemberCreateRequest'
+      responses:
+        '201':
+          description: Family member added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyMemberResponse'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health-logs:
+    get:
+      tags: [HealthLog]
+      summary: Get health logs (filtered & paginated)
+      operationId: getHealthLogs
+      parameters:
+        - name: memberId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Health log timeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResponseHealthLog'
+
+    post:
+      tags: [HealthLog]
+      summary: Add a health log entry
+      operationId: addNewHealthLogEntry
+      parameters:
+        - name: memberId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthLogCreateRequest'
+      responses:
+        '201':
+          description: Health log created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthLogResponse'
+  /health-logs/{healthLogId}:
+    put:
+      tags: [HealthLog]
+      summary: Update an existing health log entry
+      operationId: updateHealthLogEntry
+      parameters:
+        - name: healthLogId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthLogCreateRequest'
+      responses:
+        '200':
+          description: Health log updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthLogResponse'
+        '404':
+          description: Health log not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users:
+    post:
+      tags: [AppUser]
+      summary: Register a new app user
+      operationId: registerNewAppUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppUserCreateRequest'
+      responses:
+        '201':
+          description: App User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUserResponse'
+        '400':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{userId}:
+    get:
+      tags: [AppUser]
+      summary: Get app user profile
+      operationId: getAppUserProfile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: App User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUserResponse'
+
+    put:
+      tags: [AppUser]
+      summary: Update app user profile
+      operationId: updateAppUserProfile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppUserUpdateRequest'
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUserResponse'

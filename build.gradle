@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.0'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.openapi.generator' version '7.4.0'
 }
 
 group = 'com.anupam'
@@ -28,6 +29,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-h2console'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	runtimeOnly 'com.h2database:h2'
@@ -40,4 +42,32 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+openApiGenerate {
+	generatorName = "java"
+	inputSpec = "$rootDir/openapi/pediatrack.yaml"
+	outputDir = "$buildDir/generated"
+
+	modelPackage = "com.anupam.pediatrackbackend.api.generated.model"
+
+	globalProperties = [
+			models: "",
+			apis: "false",
+			supportingFiles: "false"
+	]
+
+	configOptions = [
+			dateLibrary          : "java8",
+			useJakartaEe         : "true",
+			serializationLibrary: "jackson"
+	]
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir "$buildDir/generated/src/main/java"
+		}
+	}
 }
