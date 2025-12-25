@@ -35,7 +35,7 @@ public class FamilyUser {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // NO cascade
+    private AppUser appUser;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

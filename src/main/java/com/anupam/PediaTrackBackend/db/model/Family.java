@@ -2,15 +2,12 @@ package com.anupam.PediaTrackBackend.db.model;
 
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -34,10 +31,7 @@ public class Family {
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
-    // ---------- Bidirectional ----------
-    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FamilyMember> members = new ArrayList<>();
-
-    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FamilyUser> users = new ArrayList<>(); // only deletes join table rows
+    public Family(String name) {
+        this.name = name;
+    }
 }

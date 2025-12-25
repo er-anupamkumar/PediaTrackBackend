@@ -2,8 +2,7 @@ package com.anupam.PediaTrackBackend.db.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,29 +17,25 @@ import lombok.Setter;
 @Table(
         name = "users",
         indexes = {
-                @Index(name = "idx_users_email", columnList = "email")
-        },
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = "email")
+                @Index(name = "idx_user_email", columnList = "email", unique = true)
         }
 )
-public class User {
+public class AppUser {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private java.util.UUID id;
+    private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
     @Column(nullable = false)
     private String passwordHash;
 
+    @Column(length = 255)
     private String fullName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
-
-    @OneToMany(mappedBy = "user")
-    private List<FamilyUser> families = new ArrayList<>();
 
 }

@@ -20,7 +20,8 @@ import java.util.UUID;
 @Table(
         name = "family_members",
         indexes = {
-                @Index(name = "idx_family_members_family_id", columnList = "family_id")
+                @Index(name = "idx_member_family", columnList = "family_id"),
+                @Index(name = "idx_member_dob", columnList = "dateOfBirth")
         }
 )
 public class FamilyMember {
@@ -32,7 +33,7 @@ public class FamilyMember {
     @JoinColumn(name = "family_id", nullable = false)
     private Family family;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String name;
 
     @Column(nullable = false)
@@ -44,8 +45,4 @@ public class FamilyMember {
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
-
-    // ---------- Bidirectional ----------
-    @OneToMany(mappedBy = "familyMember", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<HealthLog> healthLogs = new ArrayList<>();
 }

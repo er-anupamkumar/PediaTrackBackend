@@ -17,7 +17,9 @@ import java.util.UUID;
 @Table(
         name = "health_logs",
         indexes = {
-                @Index(name = "idx_health_logs_member_date", columnList = "family_member_id, loggedAt")
+                @Index(name = "idx_log_member_time", columnList = "family_member_id, loggedAt"),
+                @Index(name = "idx_log_type", columnList = "logType"),
+                @Index(name = "idx_log_logged_at", columnList = "loggedAt")
         }
 )
 public class HealthLog {
