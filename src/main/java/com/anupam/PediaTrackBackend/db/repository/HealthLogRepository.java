@@ -2,7 +2,7 @@ package com.anupam.PediaTrackBackend.db.repository;
 
 import com.anupam.PediaTrackBackend.db.model.FamilyMember;
 import com.anupam.PediaTrackBackend.db.model.HealthLog;
-import com.anupam.PediaTrackBackend.db.model.HealthLogType;
+import com.anupam.PediaTrackBackend.db.model.enums.HealthLogType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

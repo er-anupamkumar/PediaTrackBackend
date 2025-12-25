@@ -2,7 +2,7 @@ package com.anupam.PediaTrackBackend.db.repository;
 
 import com.anupam.PediaTrackBackend.db.model.AppUser;
 import com.anupam.PediaTrackBackend.db.model.Family;
-import com.anupam.PediaTrackBackend.db.model.FamilyRole;
+import com.anupam.PediaTrackBackend.db.model.enums.FamilyRole;
 import com.anupam.PediaTrackBackend.db.model.FamilyUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

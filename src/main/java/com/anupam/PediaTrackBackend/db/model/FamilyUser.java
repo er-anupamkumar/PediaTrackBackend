@@ -1,5 +1,6 @@
 package com.anupam.PediaTrackBackend.db.model;
 
+import com.anupam.PediaTrackBackend.db.model.enums.FamilyRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

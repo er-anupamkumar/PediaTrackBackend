@@ -1,6 +1,8 @@
 package com.anupam.PediaTrackBackend.db.repository;
 
 import com.anupam.PediaTrackBackend.db.model.*;
+import com.anupam.PediaTrackBackend.db.model.enums.Gender;
+import com.anupam.PediaTrackBackend.db.model.enums.HealthLogType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
