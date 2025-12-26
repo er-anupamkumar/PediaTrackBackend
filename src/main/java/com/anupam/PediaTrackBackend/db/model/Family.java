@@ -1,6 +1,5 @@
 package com.anupam.PediaTrackBackend.db.model;
 
-
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -15,23 +14,20 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(
-        name = "families",
-        indexes = {
-                @Index(name = "idx_families_name", columnList = "name")
-        }
-)
+    name = "families",
+    indexes = {@Index(name = "idx_families_name", columnList = "name")})
 public class Family {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Column(nullable = false)
-    private String name; // e.g. "Sharma Family"
+  @Column(nullable = false)
+  private String name; // e.g. "Sharma Family"
 
-    @Column(nullable = false)
-    private Instant createdAt = Instant.now();
+  @Column(nullable = false)
+  private Instant createdAt = Instant.now();
 
-    public Family(String name) {
-        this.name = name;
-    }
+  public Family(String name) {
+    this.name = name;
+  }
 }

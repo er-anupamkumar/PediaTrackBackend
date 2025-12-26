@@ -2,13 +2,12 @@ package com.anupam.PediaTrackBackend.db.model;
 
 import com.anupam.PediaTrackBackend.db.model.enums.HealthLogType;
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor

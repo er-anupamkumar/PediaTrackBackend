@@ -11,7 +11,7 @@ servers:
   - url: /api/v1
 
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]
 
 tags:
   - name: AppUser
@@ -40,7 +40,7 @@ components:
           format: date-time
     AppUserCreateRequest:
       type: object
-      required: [email, password, fullName]
+      required: [ email, password, fullName ]
       properties:
         email:
           type: string
@@ -73,7 +73,7 @@ components:
 
     FamilyCreateRequest:
       type: object
-      required: [name]
+      required: [ name ]
       properties:
         name:
           type: string
@@ -93,7 +93,7 @@ components:
 
     FamilyMemberCreateRequest:
       type: object
-      required: [name, dateOfBirth, gender]
+      required: [ name, dateOfBirth, gender ]
       properties:
         name:
           type: string
@@ -102,7 +102,7 @@ components:
           format: date
         gender:
           type: string
-          enum: [MALE, FEMALE, OTHER]
+          enum: [ MALE, FEMALE, OTHER ]
 
     FamilyMemberResponse:
       type: object
@@ -119,15 +119,15 @@ components:
           type: integer
         gender:
           type: string
-          enum: [MALE, FEMALE, OTHER]
+          enum: [ MALE, FEMALE, OTHER ]
 
     HealthLogType:
       type: string
-      enum: [FEVER, MEDICATION, SYMPTOM]
+      enum: [ FEVER, MEDICATION, SYMPTOM ]
 
     HealthLogCreateRequest:
       type: object
-      required: [logType, loggedAt]
+      required: [ logType, loggedAt ]
       properties:
         logType:
           $ref: '#/components/schemas/HealthLogType'
@@ -188,7 +188,7 @@ paths:
 
   /families:
     post:
-      tags: [Family]
+      tags: [ Family ]
       summary: Create a family
       operationId: createFamily
       requestBody:
@@ -213,7 +213,7 @@ paths:
 
   /families/{familyId}/members:
     post:
-      tags: [FamilyMember]
+      tags: [ FamilyMember ]
       summary: Add a family member
       operationId: addFamilyMember
       parameters:
@@ -245,7 +245,7 @@ paths:
 
   /health-logs:
     get:
-      tags: [HealthLog]
+      tags: [ HealthLog ]
       summary: Get health logs (filtered & paginated)
       operationId: getHealthLogs
       parameters:
@@ -284,7 +284,7 @@ paths:
                 $ref: '#/components/schemas/PagedResponseHealthLog'
 
     post:
-      tags: [HealthLog]
+      tags: [ HealthLog ]
       summary: Add a health log entry
       operationId: addNewHealthLogEntry
       parameters:
@@ -309,7 +309,7 @@ paths:
                 $ref: '#/components/schemas/HealthLogResponse'
   /health-logs/{healthLogId}:
     put:
-      tags: [HealthLog]
+      tags: [ HealthLog ]
       summary: Update an existing health log entry
       operationId: updateHealthLogEntry
       parameters:
@@ -340,7 +340,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /users:
     post:
-      tags: [AppUser]
+      tags: [ AppUser ]
       summary: Register a new app user
       operationId: registerNewAppUser
       requestBody:
@@ -365,7 +365,7 @@ paths:
 
   /users/{userId}:
     get:
-      tags: [AppUser]
+      tags: [ AppUser ]
       summary: Get app user profile
       operationId: getAppUserProfile
       parameters:
@@ -384,7 +384,7 @@ paths:
                 $ref: '#/components/schemas/AppUserResponse'
 
     put:
-      tags: [AppUser]
+      tags: [ AppUser ]
       summary: Update app user profile
       operationId: updateAppUserProfile
       parameters:

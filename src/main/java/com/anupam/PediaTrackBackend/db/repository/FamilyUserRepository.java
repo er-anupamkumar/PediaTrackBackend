@@ -1,23 +1,20 @@
 package com.anupam.PediaTrackBackend.db.repository;
 
-import com.anupam.PediaTrackBackend.db.model.AppUser;
-import com.anupam.PediaTrackBackend.db.model.Family;
 import com.anupam.PediaTrackBackend.db.model.FamilyUser;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FamilyUserRepository extends JpaRepository<FamilyUser, UUID> {
 
-    List<FamilyUser> findByAppUser(AppUser appUser);
+    List<FamilyUser> findByAppUserId(UUID appUserId);
 
-    List<FamilyUser> findByFamily(Family family);
+    List<FamilyUser> findByFamilyId(UUID familyId);
 
-    Optional<FamilyUser> findByFamilyAndAppUser(Family family, AppUser appUser);
+    Optional<FamilyUser> findByFamilyIdAndAppUserId(UUID familyId, UUID appUserId);
 
-    boolean existsByFamilyAndAppUser(Family family, AppUser appUser);
+    boolean existsByFamilyIdAndAppUserId(UUID familyId, UUID appUserId);
 
-    void deleteByFamily(Family family);
+    void deleteByFamilyId(UUID familyId);
 }

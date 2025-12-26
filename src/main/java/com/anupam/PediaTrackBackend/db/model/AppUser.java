@@ -3,7 +3,6 @@ package com.anupam.PediaTrackBackend.db.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

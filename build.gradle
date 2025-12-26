@@ -1,8 +1,8 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '4.0.0'
-	id 'io.spring.dependency-management' version '1.1.7'
-	id 'org.openapi.generator' version '7.4.0'
+    id 'java'
+    id 'org.springframework.boot' version '4.0.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.openapi.generator' version '7.4.0'
 }
 
 group = 'com.anupam'
@@ -10,72 +10,73 @@ version = '0.0.1-SNAPSHOT'
 description = 'Backend for PediaTrack Application'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-h2console'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'com.google.code.gson:gson:2.13.2'
-	implementation 'io.swagger.core.v3:swagger-annotations:2.2.10'
-	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
-	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'org.springframework.boot:spring-boot-h2console'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.10'
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-	runtimeOnly 'com.h2database:h2'
-	runtimeOnly 'org.postgresql:postgresql'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-core:5.21.0'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 openApiGenerate {
-	generatorName = "spring"
-	inputSpec = "$rootDir/openapi/pediatrack.yaml"
-	outputDir = "$buildDir/generated"
-	apiPackage = "com.anupam.pediatrackbackend.api.generated.api"
-	modelPackage = "com.anupam.pediatrackbackend.api.generated.model"
-	configOptions = [
-			dateLibrary: "java8",
-			useJakartaEe: "true",
-			serializationLibrary: "jackson",
-			interfaceOnly: "true" // generates interfaces, avoids controller/stub errors
-	]
-	globalProperties = [
-			models: "",
-			apis: "false",
-			supportingFiles: "false"
-	]
+    generatorName = "spring"
+    inputSpec = "$rootDir/openapi/pediatrack.yaml"
+    outputDir = "$buildDir/generated"
+    apiPackage = "com.anupam.pediatrackbackend.api.generated.api"
+    modelPackage = "com.anupam.pediatrackbackend.api.generated.model"
+    configOptions = [
+            dateLibrary         : "java8",
+            useJakartaEe        : "true",
+            serializationLibrary: "jackson",
+            interfaceOnly       : "true" // generates interfaces, avoids controller/stub errors
+    ]
+    globalProperties = [
+            models         : "",
+            apis           : "false",
+            supportingFiles: "false"
+    ]
 }
 
 tasks.named('compileJava') {
-	dependsOn 'openApiGenerate'
+    dependsOn 'openApiGenerate'
 }
 
 sourceSets {
-	main {
-		java {
-			srcDir "$buildDir/generated/src/main/java"
-		}
-	}
+    main {
+        java {
+            srcDir "$buildDir/generated/src/main/java"
+        }
+    }
 }

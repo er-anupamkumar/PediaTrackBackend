@@ -1,16 +1,15 @@
 package com.anupam.PediaTrackBackend.db.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.anupam.PediaTrackBackend.db.model.AppUser;
 import com.anupam.PediaTrackBackend.db.model.Family;
-import com.anupam.PediaTrackBackend.db.model.enums.FamilyRole;
 import com.anupam.PediaTrackBackend.db.model.FamilyUser;
+import com.anupam.PediaTrackBackend.db.model.enums.FamilyRole;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 class FamilyUserRepositoryTest {
@@ -41,7 +40,7 @@ class FamilyUserRepositoryTest {
 
         familyUserRepository.save(familyUser);
 
-        List<FamilyUser> result = familyUserRepository.findByAppUser(user);
+        List<FamilyUser> result = familyUserRepository.findByAppUserId(user.getId());
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getRole()).isEqualTo(FamilyRole.OWNER);
     }
