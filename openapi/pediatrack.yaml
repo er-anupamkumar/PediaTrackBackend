@@ -6,18 +6,28 @@ info:
     API for managing families, family members, and health logs
     (fever, medication, symptoms) with timeline and export support.
   version: 1.0.0
+  contact:
+    name: PediaTrack Support
+    email: support@pediatrack.com
 
 servers:
   - url: /api/v1
+    description: API v1
 
 security:
-  - bearerAuth: [ ]
+  - bearerAuth: []
 
 tags:
   - name: AppUser
+    description: User registration and profile management
   - name: Family
+    description: Family creation and management
+  - name: FamilyUser
+    description: Family sharing and user role management
   - name: FamilyMember
+    description: Family member (children/adults) management
   - name: HealthLog
+    description: Health event logging and timeline
 
 components:
   securitySchemes:
@@ -27,35 +37,86 @@ components:
       bearerFormat: JWT
 
   schemas:
+    # ============================================
+    # Common Schemas
+    # ============================================
 
     ErrorResponse:
       type: object
+      required: [code, message, timestamp]
       properties:
         code:
           type: string
+          description: Error code for client handling
+          example: RESOURCE_NOT_FOUND
         message:
           type: string
+          description: Human-readable error message
+          example: Family with ID abc123 not found
         timestamp:
           type: string
           format: date-time
+          description: When the error occurred
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error context
+
+    PageMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number (0-indexed)
+          example: 0
+        size:
+          type: integer
+          description: Number of items per page
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of items
+          example: 150
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 8
+
+    # ============================================
+    # AppUser Schemas
+    # ============================================
+
     AppUserCreateRequest:
       type: object
-      required: [ email, password, fullName ]
+      required: [email, password, fullName]
       properties:
         email:
           type: string
           format: email
+          maxLength: 255
+          example: john.doe@example.com
         password:
           type: string
           format: password
+          minLength: 8
+          maxLength: 128
+          description: Password (will be hashed server-side)
+          example: SecurePass123!
         fullName:
           type: string
+          minLength: 1
+          maxLength: 255
+          example: John Doe
 
     AppUserUpdateRequest:
       type: object
       properties:
         fullName:
           type: string
+          minLength: 1
+          maxLength: 255
+          example: John Updated Doe
 
     AppUserResponse:
       type: object
@@ -63,21 +124,41 @@ components:
         id:
           type: string
           format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
         email:
           type: string
+          format: email
+          example: john.doe@example.com
         fullName:
           type: string
+          example: John Doe
         createdAt:
           type: string
           format: date-time
+          example: 2024-01-15T10:30:00Z
+
+    # ============================================
+    # Family Schemas
+    # ============================================
 
     FamilyCreateRequest:
       type: object
-      required: [ name ]
+      required: [name]
       properties:
         name:
           type: string
           minLength: 1
+          maxLength: 255
+          example: Smith Family
+
+    FamilyUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Smith-Johnson Family
 
     FamilyResponse:
       type: object
@@ -85,24 +166,136 @@ components:
         id:
           type: string
           format: uuid
+          example: 987e6543-e21b-12d3-a456-426614174999
         name:
           type: string
+          example: Smith Family
         createdAt:
           type: string
           format: date-time
+          example: 2024-01-10T08:00:00Z
+        memberCount:
+          type: integer
+          description: Number of family members
+          example: 3
+        userCount:
+          type: integer
+          description: Number of users with access
+          example: 2
+
+    FamilyListResponse:
+      type: object
+      properties:
+        families:
+          type: array
+          items:
+            $ref: '#/components/schemas/FamilyResponse'
+
+    # ============================================
+    # FamilyUser Schemas (Sharing)
+    # ============================================
+
+    FamilyUserAddRequest:
+      type: object
+      required: [userId, role]
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user to add to the family
+          example: 456e7890-e12b-34d5-a678-901234567890
+        role:
+          $ref: '#/components/schemas/FamilyRole'
+
+    FamilyUserUpdateRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: '#/components/schemas/FamilyRole'
+
+    FamilyRole:
+      type: string
+      enum: [OWNER, EDITOR, VIEWER]
+      description: |
+        User role in a family:
+        - OWNER: Full control (manage users, delete family, all CRUD)
+        - EDITOR: Can manage members and logs (no user management)
+        - VIEWER: Read-only access
+      example: EDITOR
+
+    FamilyUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 111e2222-e33b-44d5-a666-777788889999
+        userId:
+          type: string
+          format: uuid
+          example: 456e7890-e12b-34d5-a678-901234567890
+        userEmail:
+          type: string
+          format: email
+          example: jane.smith@example.com
+        userFullName:
+          type: string
+          example: Jane Smith
+        role:
+          $ref: '#/components/schemas/FamilyRole'
+        joinedAt:
+          type: string
+          format: date-time
+          example: 2024-01-12T14:20:00Z
+
+    FamilyUserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/FamilyUserResponse'
+
+    # ============================================
+    # FamilyMember Schemas
+    # ============================================
 
     FamilyMemberCreateRequest:
       type: object
-      required: [ name, dateOfBirth, gender ]
+      required: [name, dateOfBirth, gender]
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 255
+          example: Emma Smith
         dateOfBirth:
           type: string
           format: date
+          example: 2020-05-15
         gender:
+          $ref: '#/components/schemas/Gender'
+
+    FamilyMemberUpdateRequest:
+      type: object
+      properties:
+        name:
           type: string
-          enum: [ MALE, FEMALE, OTHER ]
+          minLength: 1
+          maxLength: 255
+          example: Emma Marie Smith
+        dateOfBirth:
+          type: string
+          format: date
+          example: 2020-05-15
+        gender:
+          $ref: '#/components/schemas/Gender'
+
+    Gender:
+      type: string
+      enum: [MALE, FEMALE, OTHER]
+      example: FEMALE
 
     FamilyMemberResponse:
       type: object
@@ -110,39 +303,111 @@ components:
         id:
           type: string
           format: uuid
+          example: 222e3333-e44b-55d6-a777-888899990000
+        familyId:
+          type: string
+          format: uuid
+          example: 987e6543-e21b-12d3-a456-426614174999
         name:
           type: string
+          example: Emma Smith
         dateOfBirth:
           type: string
           format: date
+          example: 2020-05-15
         age:
           type: integer
+          description: Calculated age in years
+          example: 4
         gender:
+          $ref: '#/components/schemas/Gender'
+        createdAt:
           type: string
-          enum: [ MALE, FEMALE, OTHER ]
+          format: date-time
+          example: 2024-01-10T09:00:00Z
+
+    PagedFamilyMemberResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/FamilyMemberResponse'
+        page:
+          $ref: '#/components/schemas/PageMetadata'
+
+    # ============================================
+    # HealthLog Schemas
+    # ============================================
 
     HealthLogType:
       type: string
-      enum: [ FEVER, MEDICATION, SYMPTOM ]
+      enum: [FEVER, MEDICATION, SYMPTOM]
+      description: Type of health event
+      example: FEVER
 
     HealthLogCreateRequest:
       type: object
-      required: [ logType, loggedAt ]
+      required: [logType, loggedAt]
       properties:
         logType:
           $ref: '#/components/schemas/HealthLogType'
         loggedAt:
           type: string
           format: date-time
+          description: When the event occurred (can be retroactive)
+          example: 2024-01-15T14:30:00Z
         temperatureC:
           type: number
           format: double
+          minimum: 30.0
+          maximum: 45.0
+          description: Temperature in Celsius (for FEVER type)
+          example: 38.5
         medicationName:
           type: string
+          maxLength: 255
+          description: Name of medication (for MEDICATION type)
+          example: Ibuprofen
         dosage:
           type: string
+          maxLength: 100
+          description: Dosage information (for MEDICATION type)
+          example: 200mg
         notes:
           type: string
+          maxLength: 1000
+          description: Additional notes or observations
+          example: Child was fussy and had reduced appetite
+
+    HealthLogUpdateRequest:
+      type: object
+      required: [logType, loggedAt]
+      properties:
+        logType:
+          $ref: '#/components/schemas/HealthLogType'
+        loggedAt:
+          type: string
+          format: date-time
+          example: 2024-01-15T14:30:00Z
+        temperatureC:
+          type: number
+          format: double
+          minimum: 30.0
+          maximum: 45.0
+          example: 38.5
+        medicationName:
+          type: string
+          maxLength: 255
+          example: Ibuprofen
+        dosage:
+          type: string
+          maxLength: 100
+          example: 200mg
+        notes:
+          type: string
+          maxLength: 1000
+          example: Updated notes
 
     HealthLogResponse:
       type: object
@@ -150,25 +415,47 @@ components:
         id:
           type: string
           format: uuid
+          example: 333e4444-e55b-66d7-a888-999900001111
+        familyMemberId:
+          type: string
+          format: uuid
+          example: 222e3333-e44b-55d6-a777-888899990000
         logType:
           $ref: '#/components/schemas/HealthLogType'
         loggedAt:
           type: string
           format: date-time
+          example: 2024-01-15T14:30:00Z
         temperatureC:
           type: number
           format: double
+          nullable: true
+          example: 38.5
         temperatureF:
           type: number
           format: double
+          nullable: true
+          description: Auto-calculated from temperatureC
+          example: 101.3
         medicationName:
           type: string
+          nullable: true
+          example: Ibuprofen
         dosage:
           type: string
+          nullable: true
+          example: 200mg
         notes:
           type: string
+          nullable: true
+          example: Child was fussy
+        createdAt:
+          type: string
+          format: date-time
+          description: When this log entry was created
+          example: 2024-01-15T14:35:00Z
 
-    PagedResponseHealthLog:
+    PagedHealthLogResponse:
       type: object
       properties:
         content:
@@ -176,173 +463,25 @@ components:
           items:
             $ref: '#/components/schemas/HealthLogResponse'
         page:
-          type: integer
-        size:
-          type: integer
-        totalElements:
-          type: integer
-        totalPages:
-          type: integer
+          $ref: '#/components/schemas/PageMetadata'
+
+# ============================================
+# API Paths
+# ============================================
 
 paths:
 
-  /families:
-    post:
-      tags: [ Family ]
-      summary: Create a family
-      operationId: createFamily
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FamilyCreateRequest'
-      responses:
-        '201':
-          description: Family created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FamilyResponse'
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+  # ============================================
+  # AppUser Endpoints
+  # ============================================
 
-  /families/{familyId}/members:
-    post:
-      tags: [ FamilyMember ]
-      summary: Add a family member
-      operationId: addFamilyMember
-      parameters:
-        - name: familyId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FamilyMemberCreateRequest'
-      responses:
-        '201':
-          description: Family member added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FamilyMemberResponse'
-        '404':
-          description: Family not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /health-logs:
-    get:
-      tags: [ HealthLog ]
-      summary: Get health logs (filtered & paginated)
-      operationId: getHealthLogs
-      parameters:
-        - name: memberId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: startDate
-          in: query
-          schema:
-            type: string
-            format: date-time
-        - name: endDate
-          in: query
-          schema:
-            type: string
-            format: date-time
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: Health log timeline
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PagedResponseHealthLog'
-
-    post:
-      tags: [ HealthLog ]
-      summary: Add a health log entry
-      operationId: addNewHealthLogEntry
-      parameters:
-        - name: memberId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/HealthLogCreateRequest'
-      responses:
-        '201':
-          description: Health log created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthLogResponse'
-  /health-logs/{healthLogId}:
-    put:
-      tags: [ HealthLog ]
-      summary: Update an existing health log entry
-      operationId: updateHealthLogEntry
-      parameters:
-        - name: healthLogId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/HealthLogCreateRequest'
-      responses:
-        '200':
-          description: Health log updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthLogResponse'
-        '404':
-          description: Health log not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /users:
     post:
-      tags: [ AppUser ]
-      summary: Register a new app user
+      tags: [AppUser]
+      summary: Register a new user
+      description: Create a new user account. No authentication required.
       operationId: registerNewAppUser
+      security: []  # No auth required for registration
       requestBody:
         required: true
         content:
@@ -351,13 +490,13 @@ paths:
               $ref: '#/components/schemas/AppUserCreateRequest'
       responses:
         '201':
-          description: App User created
+          description: User successfully registered
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppUserResponse'
         '400':
-          description: Email already exists
+          description: Invalid input (e.g., email already exists)
           content:
             application/json:
               schema:
@@ -365,8 +504,9 @@ paths:
 
   /users/{userId}:
     get:
-      tags: [ AppUser ]
-      summary: Get app user profile
+      tags: [AppUser]
+      summary: Get user profile
+      description: Retrieve profile information for the specified user
       operationId: getAppUserProfile
       parameters:
         - name: userId
@@ -377,15 +517,22 @@ paths:
             format: uuid
       responses:
         '200':
-          description: App User profile
+          description: User profile retrieved
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppUserResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     put:
-      tags: [ AppUser ]
-      summary: Update app user profile
+      tags: [AppUser]
+      summary: Update user profile
+      description: Update profile information (currently only fullName)
       operationId: updateAppUserProfile
       parameters:
         - name: userId
@@ -402,8 +549,716 @@ paths:
               $ref: '#/components/schemas/AppUserUpdateRequest'
       responses:
         '200':
-          description: Updated user
+          description: User profile updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppUserResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================
+  # Family Endpoints
+  # ============================================
+
+  /families:
+    get:
+      tags: [Family]
+      summary: List all families for current user
+      description: Get all families the authenticated user has access to
+      operationId: listUserFamilies
+      responses:
+        '200':
+          description: List of families
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyListResponse'
+
+    post:
+      tags: [Family]
+      summary: Create a new family
+      description: Create a family and automatically assign current user as OWNER
+      operationId: createFamily
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyCreateRequest'
+      responses:
+        '201':
+          description: Family created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /families/{familyId}:
+    get:
+      tags: [Family]
+      summary: Get family details
+      description: Retrieve information about a specific family
+      operationId: getFamilyById
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Family details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyResponse'
+        '403':
+          description: User does not have access to this family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Family]
+      summary: Update family details
+      description: Update family information (requires OWNER role)
+      operationId: updateFamily
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyUpdateRequest'
+      responses:
+        '200':
+          description: Family updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyResponse'
+        '403':
+          description: User does not have OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Family]
+      summary: Delete a family
+      description: Delete family and all related data (requires OWNER role)
+      operationId: deleteFamily
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Family deleted successfully
+        '403':
+          description: User does not have OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================
+  # Family Sharing (FamilyUser) Endpoints
+  # ============================================
+
+  /families/{familyId}/users:
+    get:
+      tags: [FamilyUser]
+      summary: List users in a family
+      description: Get all users who have access to this family with their roles
+      operationId: listFamilyUsers
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of users in family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyUserListResponse'
+        '403':
+          description: User does not have access to this family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [FamilyUser]
+      summary: Add user to family
+      description: Share family with another user (requires OWNER role)
+      operationId: addUserToFamily
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyUserAddRequest'
+      responses:
+        '201':
+          description: User added to family successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyUserResponse'
+        '400':
+          description: Invalid input (e.g., user already in family)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User does not have OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family or target user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /families/{familyId}/users/{userId}:
+    patch:
+      tags: [FamilyUser]
+      summary: Update user role in family
+      description: Change a user's role in the family (requires OWNER role)
+      operationId: updateFamilyUserRole
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyUserUpdateRequest'
+      responses:
+        '200':
+          description: User role updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyUserResponse'
+        '403':
+          description: User does not have OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [FamilyUser]
+      summary: Remove user from family
+      description: Remove a user's access to the family (requires OWNER role)
+      operationId: removeUserFromFamily
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User removed from family successfully
+        '403':
+          description: User does not have OWNER permission or trying to remove last owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================
+  # FamilyMember Endpoints
+  # ============================================
+
+  /families/{familyId}/members:
+    get:
+      tags: [FamilyMember]
+      summary: List family members
+      description: Get all members of a family with pagination
+      operationId: listFamilyMembers
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: List of family members
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedFamilyMemberResponse'
+        '403':
+          description: User does not have access to this family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [FamilyMember]
+      summary: Add a family member
+      description: Create a new family member (requires EDITOR or OWNER role)
+      operationId: addFamilyMember
+      parameters:
+        - name: familyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyMemberCreateRequest'
+      responses:
+        '201':
+          description: Family member created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyMemberResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User does not have EDITOR or OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /family-members/{memberId}:
+    get:
+      tags: [FamilyMember]
+      summary: Get family member details
+      description: Retrieve information about a specific family member
+      operationId: getFamilyMemberById
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Family member details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyMemberResponse'
+        '403':
+          description: User does not have access to this family member's family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [FamilyMember]
+      summary: Update family member
+      description: Update family member information (requires EDITOR or OWNER role)
+      operationId: updateFamilyMember
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamilyMemberUpdateRequest'
+      responses:
+        '200':
+          description: Family member updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyMemberResponse'
+        '403':
+          description: User does not have EDITOR or OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [FamilyMember]
+      summary: Delete family member
+      description: Remove a family member (requires OWNER role)
+      operationId: deleteFamilyMember
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Family member deleted successfully
+        '403':
+          description: User does not have OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================
+  # HealthLog Endpoints
+  # ============================================
+
+  /health-logs:
+    get:
+      tags: [HealthLog]
+      summary: Get health logs
+      description: Retrieve health logs for a family member with optional date filtering and pagination
+      operationId: getHealthLogs
+      parameters:
+        - name: memberId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the family member
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs from this date (inclusive)
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs until this date (inclusive)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Health log timeline retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedHealthLogResponse'
+        '403':
+          description: User does not have access to this family member's family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [HealthLog]
+      summary: Add health log entry
+      description: Create a new health log entry for a family member (requires EDITOR or OWNER role)
+      operationId: addHealthLogEntry
+      parameters:
+        - name: memberId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the family member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthLogCreateRequest'
+      responses:
+        '201':
+          description: Health log created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthLogResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User does not have EDITOR or OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Family member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health-logs/{healthLogId}:
+    get:
+      tags: [HealthLog]
+      summary: Get health log entry
+      description: Retrieve a specific health log entry
+      operationId: getHealthLogById
+      parameters:
+        - name: healthLogId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Health log retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthLogResponse'
+        '403':
+          description: User does not have access to this health log's family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Health log not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [HealthLog]
+      summary: Update health log entry
+      description: Update an existing health log entry (requires EDITOR or OWNER role)
+      operationId: updateHealthLogEntry
+      parameters:
+        - name: healthLogId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthLogUpdateRequest'
+      responses:
+        '200':
+          description: Health log updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthLogResponse'
+        '403':
+          description: User does not have EDITOR or OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Health log not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [HealthLog]
+      summary: Delete health log entry
+      description: Remove a health log entry (requires EDITOR or OWNER role)
+      operationId: deleteHealthLog
+      parameters:
+        - name: healthLogId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Health log deleted successfully
+        '403':
+          description: User does not have EDITOR or OWNER permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Health log not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
