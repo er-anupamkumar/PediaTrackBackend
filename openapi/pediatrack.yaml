@@ -539,8 +539,8 @@ components:
             familyMemberId: "222e3333-e44b-55d6-a777-888899990000"
             logType: "MEDICATION"
             loggedAt: "2024-01-15T15:00:00Z"
-            temperatureC: "null"
-            temperatureF: "null"
+            temperatureC: null
+            temperatureF: null
             medicationName: "Ibuprofen"
             dosage: "100mg"
             notes: "Given with water after meal"
@@ -549,8 +549,8 @@ components:
             familyMemberId: "222e3333-e44b-55d6-a777-888899990000"
             logType: "SYMPTOM"
             loggedAt: "2024-01-15T18:00:00Z"
-            temperatureC: "null"
-            temperatureF: "null"
+            temperatureC: null
+            temperatureF: null
             medicationName: null
             dosage: null
             notes: "Mild cough, no other symptoms"
