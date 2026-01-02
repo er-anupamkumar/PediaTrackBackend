@@ -49,6 +49,14 @@ components:
           type: string
           description: Error code for client handling
           example: RESOURCE_NOT_FOUND
+          enum:
+            - RESOURCE_NOT_FOUND
+            - INVALID_INPUT
+            - PERMISSION_DENIED
+            - EMAIL_ALREADY_EXISTS
+            - USER_ALREADY_IN_FAMILY
+            - LAST_OWNER_CANNOT_BE_REMOVED
+            - INTERNAL_SERVER_ERROR
         message:
           type: string
           description: Human-readable error message
@@ -57,10 +65,14 @@ components:
           type: string
           format: date-time
           description: When the error occurred
+          example: "2024-01-15T10:30:00Z"
         details:
           type: object
           additionalProperties: true
           description: Additional error context
+          example:
+            field: familyId
+            rejectedValue: abc123
 
     PageMetadata:
       type: object
@@ -190,6 +202,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FamilyResponse'
+      example:
+        families:
+          - id: "987e6543-e21b-12d3-a456-426614174999"
+            name: "Smith Family"
+            createdAt: "2024-01-10T08:00:00Z"
+            memberCount: 3
+            userCount: 2
+          - id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Johnson Family"
+            createdAt: "2024-01-05T14:30:00Z"
+            memberCount: 5
+            userCount: 1
 
     # ============================================
     # FamilyUser Schemas (Sharing)
@@ -256,6 +280,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FamilyUserResponse'
+      example:
+        users:
+          - id: "111e2222-e33b-44d5-a666-777788889999"
+            userId: "456e7890-e12b-34d5-a678-901234567890"
+            userEmail: "jane.smith@example.com"
+            userFullName: "Jane Smith"
+            role: "OWNER"
+            joinedAt: "2024-01-10T08:00:00Z"
+          - id: "222e3333-e44b-55d6-a777-888899990000"
+            userId: "789e0123-e45b-67d8-a901-234567890123"
+            userEmail: "john.doe@example.com"
+            userFullName: "John Doe"
+            role: "EDITOR"
+            joinedAt: "2024-01-12T14:20:00Z"
 
     # ============================================
     # FamilyMember Schemas
@@ -335,6 +373,27 @@ components:
             $ref: '#/components/schemas/FamilyMemberResponse'
         page:
           $ref: '#/components/schemas/PageMetadata'
+      example:
+        content:
+          - id: "222e3333-e44b-55d6-a777-888899990000"
+            familyId: "987e6543-e21b-12d3-a456-426614174999"
+            name: "Emma Smith"
+            dateOfBirth: "2020-05-15"
+            age: 4
+            gender: "FEMALE"
+            createdAt: "2024-01-10T09:00:00Z"
+          - id: "333e4444-e55b-66d7-a888-999900001111"
+            familyId: "987e6543-e21b-12d3-a456-426614174999"
+            name: "Liam Smith"
+            dateOfBirth: "2018-03-22"
+            age: 6
+            gender: "MALE"
+            createdAt: "2024-01-10T09:15:00Z"
+        page:
+          page: 0
+          size: 20
+          totalElements: 2
+          totalPages: 1
 
     # ============================================
     # HealthLog Schemas
@@ -464,6 +523,43 @@ components:
             $ref: '#/components/schemas/HealthLogResponse'
         page:
           $ref: '#/components/schemas/PageMetadata'
+      example:
+        content:
+          - id: "444e5555-e66b-77d8-a999-000011112222"
+            familyMemberId: "222e3333-e44b-55d6-a777-888899990000"
+            logType: "FEVER"
+            loggedAt: "2024-01-15T14:30:00Z"
+            temperatureC: 38.5
+            temperatureF: 101.3
+            medicationName: null
+            dosage: null
+            notes: "Child was fussy and had reduced appetite"
+            createdAt: "2024-01-15T14:35:00Z"
+          - id: "555e6666-e77b-88d9-a000-111122223333"
+            familyMemberId: "222e3333-e44b-55d6-a777-888899990000"
+            logType: "MEDICATION"
+            loggedAt: "2024-01-15T15:00:00Z"
+            temperatureC: "null"
+            temperatureF: "null"
+            medicationName: "Ibuprofen"
+            dosage: "100mg"
+            notes: "Given with water after meal"
+            createdAt: "2024-01-15T15:02:00Z"
+          - id: "666e7777-e88b-99da-a111-222233334444"
+            familyMemberId: "222e3333-e44b-55d6-a777-888899990000"
+            logType: "SYMPTOM"
+            loggedAt: "2024-01-15T18:00:00Z"
+            temperatureC: "null"
+            temperatureF: "null"
+            medicationName: null
+            dosage: null
+            notes: "Mild cough, no other symptoms"
+            createdAt: "2024-01-15T18:05:00Z"
+        page:
+          page: 0
+          size: 20
+          totalElements: 3
+          totalPages: 1
 
 # ============================================
 # API Paths
@@ -495,12 +591,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppUserResponse'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                email: "john.doe@example.com"
+                fullName: "John Doe"
+                createdAt: "2024-01-15T10:30:00Z"
         '400':
           description: Invalid input (e.g., email already exists)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "EMAIL_ALREADY_EXISTS"
+                message: "A user with email john.doe@example.com already exists"
+                timestamp: "2024-01-15T10:30:00Z"
 
   /users/{userId}:
     get:
@@ -597,12 +702,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FamilyResponse'
+              example:
+                id: "987e6543-e21b-12d3-a456-426614174999"
+                name: "Smith Family"
+                createdAt: "2024-01-15T10:35:00Z"
+                memberCount: 0
+                userCount: 1
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INVALID_INPUT"
+                message: "Family name cannot be empty"
+                timestamp: "2024-01-15T10:35:00Z"
 
   /families/{familyId}:
     get:
@@ -765,24 +880,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FamilyUserResponse'
+              example:
+                id: "222e3333-e44b-55d6-a777-888899990000"
+                userId: "789e0123-e45b-67d8-a901-234567890123"
+                userEmail: "john.doe@example.com"
+                userFullName: "John Doe"
+                role: "EDITOR"
+                joinedAt: "2024-01-15T11:00:00Z"
         '400':
           description: Invalid input (e.g., user already in family)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "USER_ALREADY_IN_FAMILY"
+                message: "User is already a member of this family"
+                timestamp: "2024-01-15T11:00:00Z"
         '403':
           description: User does not have OWNER permission
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "PERMISSION_DENIED"
+                message: "Only family owners can add new users"
+                timestamp: "2024-01-15T11:00:00Z"
         '404':
           description: Family or target user not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "RESOURCE_NOT_FOUND"
+                message: "User with ID 789e0123-e45b-67d8-a901-234567890123 not found"
+                timestamp: "2024-01-15T11:00:00Z"
 
   /families/{familyId}/users/{userId}:
     patch:
@@ -938,24 +1072,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FamilyMemberResponse'
+              example:
+                id: "222e3333-e44b-55d6-a777-888899990000"
+                familyId: "987e6543-e21b-12d3-a456-426614174999"
+                name: "Emma Smith"
+                dateOfBirth: "2020-05-15"
+                age: 4
+                gender: "FEMALE"
+                createdAt: "2024-01-15T11:30:00Z"
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INVALID_INPUT"
+                message: "Date of birth cannot be in the future"
+                timestamp: "2024-01-15T11:30:00Z"
         '403':
           description: User does not have EDITOR or OWNER permission
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "PERMISSION_DENIED"
+                message: "You need EDITOR or OWNER role to add family members"
+                timestamp: "2024-01-15T11:30:00Z"
         '404':
           description: Family not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "RESOURCE_NOT_FOUND"
+                message: "Family with ID 987e6543-e21b-12d3-a456-426614174999 not found"
+                timestamp: "2024-01-15T11:30:00Z"
 
   /family-members/{memberId}:
     get:
@@ -1145,24 +1299,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthLogResponse'
+              example:
+                id: "444e5555-e66b-77d8-a999-000011112222"
+                familyMemberId: "222e3333-e44b-55d6-a777-888899990000"
+                logType: "FEVER"
+                loggedAt: "2024-01-15T14:30:00Z"
+                temperatureC: 38.5
+                temperatureF: 101.3
+                medicationName: null
+                dosage: null
+                notes: "Child was fussy and had reduced appetite"
+                createdAt: "2024-01-15T14:35:00Z"
         '400':
           description: Invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "INVALID_INPUT"
+                message: "Temperature must be provided for FEVER log type"
+                timestamp: "2024-01-15T14:35:00Z"
         '403':
           description: User does not have EDITOR or OWNER permission
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "PERMISSION_DENIED"
+                message: "You need EDITOR or OWNER role to add health logs"
+                timestamp: "2024-01-15T14:35:00Z"
         '404':
           description: Family member not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "RESOURCE_NOT_FOUND"
+                message: "Family member with ID 222e3333-e44b-55d6-a777-888899990000 not found"
+                timestamp: "2024-01-15T14:35:00Z"
 
   /health-logs/{healthLogId}:
     get:
