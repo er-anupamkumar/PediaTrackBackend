@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: PediaTrackBackend
+  profiles:
+    active: local
