@@ -60,6 +60,7 @@ openApiGenerate {
             dateLibrary         : "java8",
             useJakartaEe        : "true",
             serializationLibrary: "jackson",
+            openApiNullable:       "false",
             interfaceOnly       : "true" // generates interfaces, avoids controller/stub errors
     ]
     globalProperties = [
